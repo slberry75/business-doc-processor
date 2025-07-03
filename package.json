@@ -1,0 +1,36 @@
+{
+  "name": "business-doc-processor",
+  "version": "1.0.0",
+  "description": "Enterprise Document Processing Application - Microservices with React/Node.js/TypeScript",
+  "private": true,
+  "scripts": {
+    "install:all": "npm install && npm run install:services && npm run install:frontend",
+    "install:services": "cd services/auth-service && npm install && cd ../document-service && npm install && cd ../processing-service && npm install && cd ../reporting-service && npm install && cd ../api-gateway && npm install",
+    "install:frontend": "cd frontend && npm install",
+    "dev": "docker-compose up --build",
+    "test": "npm run test:services",
+    "test:services": "cd services/auth-service && npm test && cd ../document-service && npm test && cd ../processing-service && npm test && cd ../reporting-service && npm test && cd ../api-gateway && npm test",
+    "build": "npm run build:services && npm run build:frontend",
+    "build:services": "cd services/auth-service && npm run build && cd ../document-service && npm run build && cd ../processing-service && npm run build && cd ../reporting-service && npm run build && cd ../api-gateway && npm run build",
+    "build:frontend": "cd frontend && npm run build"
+  },
+  "workspaces": [
+    "services/*",
+    "frontend"
+  ],
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.0",
+    "concurrently": "^8.2.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/slberry75/business-doc-processor.git"
+  },
+  "author": "Stacey Berry",
+  "license": "MIT"
+}
