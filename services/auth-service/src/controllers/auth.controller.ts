@@ -3,7 +3,8 @@ import bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
 import { RegisterRequest, LoginRequest, User, AuthResponse } from '../types/auth.types';
 import { generateToken } from '../utils/jwt.utils';
-
+import { loginSchema, registerSchema } from '../validation/auth.validation';
+import { validateRequest } from '../utils/validation';
 // In-memory user storage (we'll replace with database later)
 const users: User[] = [];
 
@@ -11,6 +12,10 @@ export class AuthController {
   
   async register(req: Request<{}, AuthResponse, RegisterRequest>, res: Response<AuthResponse>): Promise<void> {
     try {
+
+      if (!validateRequest(registerSchema, req, res)) {
+        return;
+      }
       const { email, password } = req.body;
 
       // Check if user already exists
@@ -55,6 +60,9 @@ export class AuthController {
     try {
       const { email, password } = req.body;
 
+      if (!validateRequest(loginSchema, req, res)) {
+        return;
+      }
       // Find user
       const user = users.find(u => u.email === email);
       if (!user) {
