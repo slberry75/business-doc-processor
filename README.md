@@ -39,7 +39,8 @@ Enterprise-level document processing application built with microservices archit
 # Clone the repository
 git clone https://github.com/slberry75/business-doc-processor.git
 cd business-doc-processor
-
+1. Copy `.env.template` to `.env`
+2. Fill in your actual database credentials
 # Install all dependencies
 npm run install:all
 

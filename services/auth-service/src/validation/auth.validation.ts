@@ -8,7 +8,8 @@ export const registerSchema = Joi.object({
       'string.email': 'Invalid email format',
       'any.required': 'Email is required'
     }),
-  
+  firstName: Joi.string(),
+  lastName: Joi.string(),
   password: Joi.string()
     .min(12)
     .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)

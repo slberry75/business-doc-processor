@@ -44,3 +44,7 @@ export interface TokenPayload {
   userId: string;
   email: string;
 }
+export interface FullJWTTokenPayload extends TokenPayload {
+  iat: 1625097600,         // ← Standard JWT (issued at)
+  exp: 1625184000          // ← Standard JWT (expires at)
+}

@@ -1,27 +1,35 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
-import { RegisterRequest, LoginRequest, User, AuthResponse } from '../types/auth.types';
+import { RegisterRequest, LoginRequest, AuthResponse } from '../types/auth.types';
 import { generateToken } from '../utils/jwt.utils';
 import { loginSchema, registerSchema } from '../validation/auth.validation';
 import { validateRequest } from '../utils/validation';
-// In-memory user storage (we'll replace with database later)
-const users: User[] = [];
+import { AuthDataSource } from '../config/database';
+import { User } from '../entities/User';
+import logger from '../config/logger'
+import { Timestamp } from 'typeorm';
 
 export class AuthController {
   
   async register(req: Request<{}, AuthResponse, RegisterRequest>, res: Response<AuthResponse>): Promise<void> {
+    const { email, firstName, lastName, password } = req.body;
     try {
 
       if (!validateRequest(registerSchema, req, res)) {
         return;
       }
-      const { email, password } = req.body;
-
+      const users = AuthDataSource.getRepository(User);
       // Check if user already exists
-      const existingUser = users.find(u => u.email === email);
+      const existingUser = await users.findOne({
+        where: { email: email }  
+      });
       if (existingUser) {
         res.status(400).json({ error: 'User already exists' } as any);
+        logger.auth('Registration failed, user already exists', {
+          email: email,
+          timestamp: new Date().toISOString() 
+        })
         return;
       }
 
@@ -29,44 +37,62 @@ export class AuthController {
       const passwordHash = await bcrypt.hash(password, 10);
 
       // Create new user
-      const newUser: User = {
-        id: uuidv4(),
-        email,
-        passwordHash,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      };
+      const newUser = new User();
+      newUser.email = email;
+      newUser.passwordHash = passwordHash;
+      newUser.firstName = firstName || null;
+      newUser.lastName = lastName || null;
 
-      users.push(newUser);
-
+      const savedUser = await users.save(newUser);
+      logger.auth('User registered', {
+        userId: savedUser.id,
+        email: savedUser.email,
+        timestamp: new Date().toISOString()
+      })
       // Generate JWT token
-      const token = generateToken({ userId: newUser.id, email: newUser.email });
+      const token = generateToken({ userId: savedUser.id, email:savedUser.email });
 
       // Return response
       res.status(201).json({
         token,
         user: {
-          id: newUser.id,
-          email: newUser.email
+          id: savedUser.id,
+          email: savedUser.email
         }
       });
 
-    } catch (error) {
-      res.status(500).json({ error: 'Registration failed' } as any);
+      logger.auth('Token generated', {
+        userId: savedUser.id,
+        email: savedUser.email,
+        timestamp: new Date().toISOString() 
+      })
+
+    } catch (error:unknown) {
+      res.status(500).json({ error: `Registration failed for ${email}` } as any);
+      logger.auth('Registration failed', {
+        email: email,
+        timeStamp: new Date().toISOString()
+      })
     }
   }
 
   async login(req: Request<{}, AuthResponse, LoginRequest>, res: Response<AuthResponse>): Promise<void> {
+    const { email, password } = req.body;
     try {
-      const { email, password } = req.body;
-
       if (!validateRequest(loginSchema, req, res)) {
         return;
       }
+      const users = AuthDataSource.getRepository(User);
       // Find user
-      const user = users.find(u => u.email === email);
+      const user = await users.findOne({
+        where: { email: email }
+      });
       if (!user) {
         res.status(401).json({ error: 'Invalid credentials' } as any);
+        logger.auth('Login failed, invalid credentials', {
+          email: email,
+          timestamp: new Date().toISOString()
+        })
         return;
       }
 
@@ -74,12 +100,20 @@ export class AuthController {
       const isValidPassword = await bcrypt.compare(password, user.passwordHash);
       if (!isValidPassword) {
         res.status(401).json({ error: 'Invalid credentials' } as any);
+        logger.auth('Login failed, invalid credentials', {
+          email: email,
+          timestamp: new Date().toISOString()
+        })
         return;
       }
 
       // Generate JWT token
       const token = generateToken({ userId: user.id, email: user.email });
-
+      logger.auth('Login Token Generated', {
+          userId: user.id,
+          email: user.email,
+          timestamp: new Date().toISOString()
+        })
       // Return response
       res.json({
         token,
@@ -88,9 +122,18 @@ export class AuthController {
           email: user.email
         }
       });
+      logger.auth('Login Succeeded', {
+        userId: user.id,
+        email: user.email,
+        timestamp: new Date().toISOString()
+      })
 
     } catch (error) {
       res.status(500).json({ error: 'Login failed' } as any);
+      logger.auth('Login failed', {
+        email: email,
+        timestamp: new Date().toISOString()
+      })
     }
   }
 
@@ -100,5 +143,9 @@ export class AuthController {
       message: 'Profile retrieved successfully',
       user: req.user
     });
+    logger.auth('Profile retrieved', {
+      user: req.user,
+      timestamp: new Date().toISOString()
+    })
   }
 }
