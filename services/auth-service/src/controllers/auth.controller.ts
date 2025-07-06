@@ -1,14 +1,12 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
-import { v4 as uuidv4 } from 'uuid';
-import { RegisterRequest, LoginRequest, AuthResponse } from '../types/auth.types';
+import { RegisterRequest, LoginRequest, AuthResponse, TokenPayload } from '../types/auth.types';
 import { generateToken } from '../utils/jwt.utils';
 import { loginSchema, registerSchema } from '../validation/auth.validation';
 import { validateRequest } from '../utils/validation';
 import { AuthDataSource } from '../config/database';
 import { User } from '../entities/User';
 import logger from '../config/logger'
-import { Timestamp } from 'typeorm';
 
 export class AuthController {
   
