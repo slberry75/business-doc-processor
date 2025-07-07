@@ -1,4 +1,5 @@
-import { LoginRequest, RegistrationRequest, AuthenticationResponse } from './auth';
+import { AxiosError } from 'axios';
+import { LoginRequest, RegistrationRequest, AuthenticationResponse, ProfileResponse } from './auth';
 
 // Define the API contract - what each endpoint expects and returns
 interface ApiEndpoints {
@@ -14,17 +15,24 @@ interface ApiEndpoints {
     request: RegistrationRequest;
     response: AuthenticationResponse;
   };
+  AUTH_PROFILE: {
+    url: '/api/auth/profile';
+    method: 'GET';
+    request: void;
+    response: ProfileResponse;
+  };
 }
 
 // Type magic: Create a union type of all endpoint names
 // This creates: 'AUTH_LOGIN' | 'AUTH_REGISTER'
-type EndpointKey = keyof ApiEndpoints;
+export type EndpointKey = keyof ApiEndpoints;
+export type RequiresBody<T extends EndpointKey> =  ApiEndpoints[T]['method'] extends 'GET' ? false : true;
 
 // More type magic: Generic RequestConfig that changes based on endpoint
 // T extends EndpointKey means T must be one of our endpoint names
 export interface RequestConfig<T extends EndpointKey> {
   endpoint: T;                                    // The endpoint name (like 'AUTH_LOGIN')
-  body: ApiEndpoints[T]['request'];              // Body type changes based on endpoint!
+  body: RequiresBody<T> extends true ? ApiEndpoints[T]['request'] : never;              // Body type changes based on endpoint!
   headers?: Record<string, string>;               // Optional headers
 }
 
@@ -48,13 +56,45 @@ export const API_ENDPOINTS: ApiEndpoints = {
     method: 'POST',
     request: {} as RegistrationRequest,
     response: {} as AuthenticationResponse
+  },
+  AUTH_PROFILE: {
+    url: '/api/auth/profile',
+    method: 'GET',
+    request: undefined,
+    response: {} as ProfileResponse
   }
 };
 
-// Keep your existing ApiError interface here too
-export interface ApiError {
-  message: string;
-  statusCode?: number;
-  type: 'network' | 'api' | 'validation';
-  errors?: string[];
+
+export type ApiErrorType = 'network' | 'api' | 'validation' | 'unknown';
+export class ApiError extends Error {
+
+  constructor(
+    public type: ApiErrorType,
+    message: string,
+    public statusCode?: number,
+    public errors?: string[]
+  ) {
+    super(message);
+  }
+
+  static fromAxiosError(error: AxiosError) : ApiError {
+    // Axios error types you need to handle:
+    // Server responded with error status (4xx, 5xx)
+    if (error.response) {
+        return new ApiError(
+            'api', 
+            typeof error.response.data === 'string' ? error.response.data : 'API Error', 
+            error.response.status);
+    } else if (error.request) {
+    // Request made but no response (network issues)
+        return new ApiError (
+            'network',
+            error.message
+        );
+    } else {
+    // Something else happened
+        return new ApiError ('unknown', error.message)
+    }
+  }
 }

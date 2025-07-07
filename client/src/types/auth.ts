@@ -20,6 +20,13 @@ export interface AuthenticationResponse {
     user: User
 };
 
+export interface ProfileResponse {
+    userId: string,
+    email: string,
+    firstName: string,
+    lastName: string
+}
+
 export interface AuthenticationContext {
     authenticated: boolean,
     user?: User

@@ -1,6 +1,7 @@
-import axios, { AxiosInstance, AxiosResponse } from 'axios';
+import axios, { AxiosError, AxiosInstance, AxiosResponse } from 'axios';
 import  logger from '../config/logger';
-import { ApiError } from '../types/api';
+import { API_ENDPOINTS, ApiError, ApiResponse, EndpointKey, RequestConfig } from '../types/api';
+import { LoginRequest, RegistrationRequest } from '../types/auth';
 class AuthService {
   private apiClient: AxiosInstance;
 
@@ -44,17 +45,55 @@ class AuthService {
     );
   }
 
-  // We'll implement this method next
-  private handleApiError(error: any): ApiError {
-    // Implementation comes in next step
-    return {
-        message:"test",
-        type:"network",
-        statusCode:500,
+  public async login(credentials: LoginRequest) {
+    const config: RequestConfig<'AUTH_LOGIN'> = {
+        endpoint : 'AUTH_LOGIN',
+        body : credentials
+    };
+    return this.makeRequest(config);
+  }
+
+  public async register(registration:RegistrationRequest) {
+    const config: RequestConfig<'AUTH_REGISTER'> = {
+        endpoint: 'AUTH_REGISTER',
+        body: registration
+    };
+    return this.makeRequest(config);
+  }
+
+  public async getProfile() {
+    const config: RequestConfig<'AUTH_PROFILE'> = {
+        endpoint: 'AUTH_PROFILE',
+        body: undefined as never
+    };
+    return this.makeRequest(config);
+  }
+
+  private async makeRequest<T extends EndpointKey>(config: RequestConfig<T>) : Promise<ApiResponse<T>> {
+    const endpoint = API_ENDPOINTS[config.endpoint as keyof typeof API_ENDPOINTS];
+    try {
+        
+        switch(endpoint.method) {
+            case 'GET':
+                return await this.apiClient.get(endpoint.url)
+            case 'POST':
+                return await this.apiClient.post(endpoint.url, config.body);
+        }
+    } catch (error: unknown) {
+        throw this.handleApiError(error);
     }
   }
 
-  // We'll implement auth methods here
+  private handleApiError(error: any): ApiError {
+    if (error instanceof AxiosError) {
+        return ApiError.fromAxiosError(error);
+    }  else {
+        return new ApiError(
+            'unknown', 
+            error instanceof Error ? error.message : 'An unexpected error has occured.'); 
+    }  
+  }
+
 }
 
 export const authService = new AuthService();
