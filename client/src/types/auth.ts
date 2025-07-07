@@ -32,13 +32,6 @@ export interface AuthenticationContext {
     Logout(): Promise<void>;
 }
 
-export interface ApiError {
-  message: string;           // User-friendly message to display
-  statusCode?: number;       // HTTP status (400, 401, 500, etc.)
-  errors?: string[];         // Multiple validation errors
-  type?: 'network' | 'api' | 'validation';  // Error category
-}
-
 export interface FormErrors {
     [field: string] : string;
 }
