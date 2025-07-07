@@ -1,24 +1,23 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
-
+import logger from './config/logger';
 function App() {
+
+  // Test environment variables and logger
+  logger.info('React app started', {
+    environment: process.env.REACT_APP_ENVIRONMENT,
+    apiBaseUrl: process.env.REACT_APP_API_BASE_URL,
+    logLevel: process.env.REACT_APP_LOG_LEVEL
+  });
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
+    <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+      <div className="bg-white p-8 rounded-lg shadow-lg">
+        <h1 className="text-3xl font-bold text-gray-800 mb-4">
+          Tailwind CSS Test
+        </h1>
+        <p className="text-gray-600">
+          If you see styled text and colors, Tailwind is working!
         </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      </div>
     </div>
   );
 }
