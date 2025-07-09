@@ -1,12 +1,17 @@
 import logger from './config/logger';
-function App() {
+import { authService } from './services/authService';
+import { FloatingLabelInput } from './components/common/FloatingLabelInput';
 
+function App() {
+  logger.info('Auth service imported');
   // Test environment variables and logger
   logger.info('React app started', {
     environment: process.env.REACT_APP_ENVIRONMENT,
     apiBaseUrl: process.env.REACT_APP_API_BASE_URL,
     logLevel: process.env.REACT_APP_LOG_LEVEL
   });
+
+console.log('Auth service:', authService);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
@@ -16,6 +21,7 @@ function App() {
         </h1>
         <p className="text-gray-600">
           If you see styled text and colors, Tailwind is working!
+          <FloatingLabelInput label='Name' />
         </p>
       </div>
     </div>

@@ -6,8 +6,11 @@ class AuthService {
   private apiClient: AxiosInstance;
 
   constructor() {
+    if (!process.env.REACT_APP_API_BASE_URL) {
+        throw new Error('REACT_APP_API_BASE_URL environment variable is required');
+    }
     this.apiClient = axios.create({
-      baseURL: process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001',
+      baseURL: process.env.REACT_APP_API_BASE_URL,
       timeout: 10000,
       headers: {
         'Content-Type': 'application/json',

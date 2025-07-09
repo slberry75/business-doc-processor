@@ -10,8 +10,8 @@ export interface LoginRequest {
 
 export interface RegistrationRequest extends LoginRequest{
   confirmPassword?: string;
-  firstName?: string;
-  lastName?: string;
+  firstName?: string | null;
+  lastName?: string | null;
   acceptTerms?: boolean;
 }
 
